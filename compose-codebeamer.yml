@@ -1,0 +1,34 @@
+
+version: '2'
+networks:
+  cb-network:
+volumes:
+  codebeamer-volume:
+  mysql-codebeamer-volume:
+
+services:
+  codebeamer:
+    image: dextershin/codebeamer:${CODEBEAMER_VERSION}
+    restart: unless-stopped
+    logging:
+      driver: "journald"
+    networks:
+      - cb-network
+    ports:
+      - "8081":"8080"
+    volumes:
+      - codebeamer-volume:/opt/codebeamer
+    environment:
+      DEBUG_LEVEL: 256
+
+  mysql-codebeamer:
+    image: mysql:5.7
+    networks:
+      - cb-network
+    volume:
+      - mysql-codebeamer-volume:/var/lib/mysql
+    environment:
+        MYSQL_ROOT_PASSWORD: ${CB_MYSQL_ROOT_PASSWORD}
+        MYSQL_USER: ${CB_MYSQL_USER}
+        MYSQL_PASSWORD: ${CB_MYSQL_PASSWORD}
+        MYSQL_DATABASE: ${CB_MYSQL_DATABASE}

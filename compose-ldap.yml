@@ -1,0 +1,44 @@
+version: '2'
+networks:
+  ci-network:
+volumes:
+  openldap-etc-volume:
+  openldap-repo-volume:
+  lam-config-volume:
+services:
+  openldap:
+    image: openfrontier/openldap-server
+    restart: unless-stopped
+    logging:
+      driver: "journald"
+    networks:
+     - ci-network
+    ports:
+     - "389:389"
+    volumes:
+     - openldap-etc-volume:/etc/ldap
+     - openldap-repo-volume:/var/lib/ldap
+    environment:
+      SLAPD_PASSWORD: ${LDAP_PWD}
+      SLAPD_DOMAIN: ${LDAP_DOMAIN}
+      SLAPD_ADDITIONAL_SCHEMAS: ppolicy
+      SLAPD_ADDITIONAL_MODULES: ppolicy
+      DEBUG_LEVEL: 256
+  lam:
+    image: openfrontier/lam:${LAM_VERSION}
+    restart: unless-stopped
+    logging:
+      driver: "journald"
+    networks:
+     - ci-network
+    ports:
+     - "${LAM_PORT}:80"
+    volumes:
+     - lam-config-volume:/var/www/html/lam/config
+    environment:
+      constraint:node: =${PROXY_NODE}
+      LDAP_URL: ${LDAP_URI}
+      LDAP_PORT: ${LDAP_PORT}
+      LDAP_DN: ${LDAP_DOMAIN}
+      USER_DN: ${LDAP_USER_BASEDN}
+      GROUP_DN: ${LDAP_GROUP_BASEDN}
